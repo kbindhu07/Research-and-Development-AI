@@ -1,42 +1,82 @@
-# Parametric Curve Fitting Tool
+# Assignment for Research and Development
 
+## 🧮 Fitted Model and Parameters
 
-## 🧭 Overview
+After parameter estimation using non-linear least squares, the following values were obtained:
 
-This repository contains a Python tool for **non-linear parametric curve fitting** using optimization techniques from the SciPy library.  
-It estimates parameters of a custom 2D model that describes a trajectory `(x, y)` as a function of an inferred parameter `t`.
-
-The script automatically:
-- Loads coordinate data from a CSV file.
-- Infers a pseudo-time variable from spatial geometry.
-- Fits the parameters `(theta, M, X)` using non-linear least squares.
-- Reports fit statistics and generates a comparison plot.
+\[
+\theta = 0.826 \text{ rad}, \quad M = 0.0742, \quad X = 11.5793
+\]
 
 ---
 
-## ⚙️ Model Description
-
-The parametric model is defined as:
+## 🧾 Final Model Equations (LaTeX Format)
 
 \[
 \begin{aligned}
-x(t) &= t \cos(\theta) - e^{M|t|} \sin(0.3t)\sin(\theta) + X \\
-y(t) &= 42 + t \sin(\theta) + e^{M|t|} \sin(0.3t)\cos(\theta)
+x(t) &= t\cos(0.826) - e^{0.0742|t|}\sin(0.3t)\sin(0.826) + 11.5793, \\
+y(t) &= 42 + t\sin(0.826) + e^{0.0742|t|}\sin(0.3t)\cos(0.826)
 \end{aligned}
 \]
 
-where:
-- **θ (theta)**: orientation angle in radians  
-- **M**: exponential modulation coefficient  
-- **X**: horizontal offset parameter  
+---
 
-The parameter set `[θ, M, X]` is optimized by minimizing residuals between observed and modeled `(x, y)` values.
+## 🧩 Combined Representation (for Desmos)
+
+\[
+\left(t*\cos(0.826)-e^{0.0742\left|t\right|}\cdot\sin(0.3t)\sin(0.826)+11.5793,\ 
+42+t*\sin(0.826)+e^{0.0742\left|t\right|}\cdot\sin(0.3t)\cos(0.826)\right)
+\]
+
+You can visualize this directly at:  
+🔗 **[Desmos Graph Link](https://www.desmos.com/calculator/rfj91yrxob)**
 
 ---
 
-## 📦 Requirements
+## ➕ Additional Code / Math Used to Extract Variables
 
-Ensure you have the following Python packages installed:
+Parameter values were estimated using **non-linear least squares optimization** with `scipy.optimize.least_squares`.  
+Below is a summary of the fitting method used:
 
-```bash
-pip install numpy pandas scipy matplotlib
+```python
+import numpy as np
+from scipy.optimize import least_squares
+
+def model(params, t):
+    theta, M, X = params
+    e = np.exp(M * np.abs(t))
+    s03 = np.sin(0.3 * t)
+    x = t * np.cos(theta) - e * s03 * np.sin(theta) + X
+    y = 42 + t * np.sin(theta) + e * s03 * np.cos(theta)
+    return x, y
+
+def residuals(params, t, x_obs, y_obs):
+    x_pred, y_pred = model(params, t)
+    return np.r_[x_pred - x_obs, y_pred - y_obs]
+
+# Example parameter estimation
+x0 = [0.8, 0.07, 11.5]  # initial guess
+res = least_squares(residuals, x0, args=(t_data, x_data, y_data))
+print(res.x)  # -> [0.826, 0.0742, 11.5793]
+
+📘 Interpretation
+
+θ (theta) controls the primary orientation of the curve.
+
+M defines the rate of exponential modulation with 
+∣
+𝑡
+∣
+∣t∣.
+
+X introduces a horizontal offset to align the curve with observed data.
+
+The constant 42 represents a fixed vertical offset baseline.
+
+🧪 Notes
+
+The function combines linear and oscillatory components through sin(0.3t) and an exponential modulation term.
+
+Parameter extraction was performed with high precision (xtol=1e-12, ftol=1e-12).
+
+The results were validated visually using Desmos for confirmation.
